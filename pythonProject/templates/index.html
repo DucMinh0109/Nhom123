@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dự đoán nguy cơ mắc bệnh</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background-color: #0d1117;
+            color: #c9d1d9;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            background: #161b22;
+            padding: 50px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        h1 {
+            color: #58a6ff;
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        p.subtitle {
+            color: #8b949e;
+            font-size: 1rem;
+            margin-bottom: 25px;
+        }
+
+        .form-control, .form-select {
+            background-color: #21262d !important;
+            color: #c9d1d9 !important;
+            border: 1px solid #30363d !important;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: none !important;
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: #21262d !important;
+            color: #c9d1d9 !important;
+            border-color: #58a6ff !important;
+            box-shadow: 0 0 4px rgba(88, 166, 255, 0.5) !important;
+        }
+
+        .btn-primary {
+            background-color: #238636;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            width: 100%;
+            font-weight: bold;
+        }
+
+        .btn-primary:hover {
+            background-color: #2ea043;
+        }
+
+        .results-container {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .result-card {
+            background: #21262d;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 6px solid #58a6ff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            color: #c9d1d9;
+
+        }
+
+        .result-card h5 {
+            color: #58a6ff;
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+        }
+
+        .info-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #161b22;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .info-item-left p {
+        text-align: left;
+        margin-left: 20px; /* Optional: add some left margin for better readability */
+        }
+
+
+        .info-item p {
+            color: #8b949e;
+        }
+
+        .info-item .btn-collapse {
+            background-color: transparent;
+            border: none;
+            color: #58a6ff;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .info-item .btn-collapse:hover {
+            color: #238636;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dự đoán nguy cơ mắc bệnh</h1>
+        <p class="subtitle">Nhập các triệu chứng để dự đoán nguy cơ mắc bệnh</p>
+        <form method="POST" action="/predict">
+            <div class="form-group">
+                <input type="text" class="form-control" name="symptoms" placeholder="Nhập triệu chứng, cách nhau bằng dấu phẩy" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Dự đoán</button>
+        </form>
+
+        <div class="results-container">
+            {% if results %}
+                {% for result in results %}
+                    <div class="result-card">
+                        <h5>{{ result['Disease'] }}: {{ result['Probability'] }}%</h5>
+                        <div class="info-item">
+                            <button class="btn-collapse" type="button" data-bs-toggle="collapse" data-bs-target="#symptoms-{{ loop.index }}" aria-expanded="false" aria-controls="symptoms-{{ loop.index }}">
+                                ⬇ Triệu chứng
+                            </button>
+                            <div class="collapse" id="symptoms-{{ loop.index }}">
+                                <p>{{ result['Symptoms'] }}</p>
+                            </div>
+                        </div>
+                        <div class="info-item info-item-left">
+                            <p><strong>Nguyên nhân phỏng đoán:</strong> {{ result['Cause'] if result['Cause'] else 'Không có thông tin' }}</p>
+                            <p><strong>Phòng ngừa:</strong> {{ result['Prevention'] if result['Prevention'] else 'Không có thông tin' }}</p>
+                            <p><strong>Điều trị:</strong> {{ result['Treatment'] if result['Treatment'] else 'Không có thông tin' }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted">Chưa có kết quả dự đoán. Vui lòng nhập triệu chứng và thử lại.</p>
+            {% endif %}
+        </div>
+
+        <div class="info-item">
+            <h5>Giải thích kết quả</h5>
+            <p>Chúng tôi sử dụng một thuật toán dự đoán dựa trên các triệu chứng bạn nhập vào. Các triệu chứng sẽ được so sánh với cơ sở dữ liệu bệnh để tính toán xác suất mắc bệnh. Mỗi triệu chứng có trọng số riêng biệt, và xác suất cuối cùng sẽ được tính toán dựa trên số lượng triệu chứng trùng khớp.</p>
+            <p>Xác suất tối đa được giới hạn ở 80% để đảm bảo tính chính xác trong dự đoán. Kết quả chỉ mang tính chất tham khảo và không thay thế cho chẩn đoán y tế chuyên nghiệp.</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
